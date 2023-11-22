@@ -46,6 +46,9 @@ map<char, set<int>> transitions(set<int>& source, T& g) {
                                   //для текущего символа перехода p.first
 
             expanded.insert(v);  // добавляем вершину в расширенный набор
+            set<int> visited; // создаем множество посещенных вершин
+            dfs(v, g, visited); // вызываем функцию dfs для обхода вершин из текущей вершины v
+            expanded.insert(visited.begin(), visited.end()); // добавляем все посещенные вершины в расширенный набор expanded
 
             for (auto& edge : g[v]) { // проходит по каждой вершине v в текущем множестве достижимых вершин p.second 
                                      //для текущего символа перехода p.first
@@ -80,15 +83,29 @@ int main() {
         if ('a' <= x && x <= 'z') {
             int st = newState();
             int st1 = newState();
-            nfa.push_back({ {'-', st} });
-            nfa.push_back({ {x, st1} });
+            nfa.push_back({});
+            nfa.push_back({});
+            nfa[st].push_back({ x, st1 });
+
+            int lastend = parts[parts.size() - 1].second;
+            nfa[lastend].push_back({ '-', st });
             parts.push_back({ st, st1 });
         }
         else if (x == '*') {
             int st = newState();
-            nfa.push_back({ {' ', st} });
-            nfa.push_back({ {' ', st} });
-            nfa.push_back({ {' ', st - 2} });
+
+            nfa.push_back({});
+            
+            int laststart = parts[parts.size() - 1].first;
+            int lastend = parts[parts.size() - 1].second;
+
+            nfa[laststart].push_back({ ' ', st });
+                                                        // замыкаем      
+            nfa[st].push_back({ ' ', laststart }); 
+
+            nfa[lastend].push_back({ ' ', st}); // соединяем st с последним прошлой пары состояний
+            
+
             parts.push_back({ st, st });
         }
     }
@@ -97,7 +114,9 @@ int main() {
     cout << "НКА старт: " << start << "; финиш: " << finish << endl;
     // Вывод НКА списком ребер
     for (int i = 0; i < nfa.size(); i++) {
+        
         for (auto& edge : nfa[i]) {
+            
             char c = edge.first;
             int u = edge.second;
             if (c == ' ') {
@@ -115,12 +134,12 @@ int main() {
                 }
                 j++;
             }
-            else if (c != '-') {
-                cout << u - 1 << ' ' << c << ' ' << u << endl;
+            else {
+                cout << u << ' ' << c << ' ' << u << endl;
             }
-            else if (c == '-') {
-                cout << u - 1 << ' ' << c << ' ' << u << endl;
-            }
+            
+            
+            
         }
     }
 
